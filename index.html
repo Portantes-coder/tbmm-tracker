@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TBMM Şeffaflık Platformu</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <h1>Türkiye Büyük Millet Meclisi</h1>
+        <p>Milletvekillerinin oyları ve iletişim bilgileri</p>
+        
+        <div class="controls">
+            <input type="text" id="searchInput" placeholder="Milletvekili Ara (örn: Ahmet)...">
+            <select id="provinceFilter">
+                <option value="all">Tüm İller</option>
+                </select>
+        </div>
+    </header>
+
+    <main>
+        <div id="parliament-map" class="parliament-map"></div>
+    </main>
+
+    <div id="mp-modal" class="modal hidden">
+        <div class="modal-content">
+            <span class="close-btn" id="closeModal">&times;</span>
+            
+            <div class="profile-header" style="text-align: center; margin-bottom: 15px;">
+                <img id="modal-image" src="" alt="MP Photo" style="width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 3px solid #ccc; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+            </div>
+            
+            <h2 id="modal-name" style="text-align: center; margin-top: 0;">MP Name</h2>
+            <h4 id="modal-party-province" style="text-align: center; color: #666;">Party - Province</h4>
+            
+            <div class="contact-info">
+                <p><strong>E-posta:</strong> <span id="modal-email"></span></p>
+                <p><strong>Telefon:</strong> <span id="modal-phone"></span></p>
+                <p><strong>Adres:</strong> <span id="modal-address"></span></p>
+            </div>
+
+            <div class="voting-history">
+                <h3>Son Oylamalar</h3>
+                <ul id="modal-votes">
+                    </ul>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

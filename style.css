@@ -1,0 +1,145 @@
+/* --- BASE STYLES --- */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f8f9fa;
+    color: #333;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+header {
+    text-align: center;
+    padding: 2rem 1rem;
+    width: 100%;
+    background-color: #fff;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    margin-bottom: 2rem;
+}
+
+h1 { margin: 0; color: #b30000; } /* Turkish Red */
+p { color: #666; }
+
+.controls {
+    margin-top: 1.5rem;
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+input, select {
+    padding: 10px 15px;
+    font-size: 1rem;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    width: 250px;
+    max-width: 100%;
+}
+
+/* --- PARLIAMENT MAP --- */
+.parliament-map {
+    position: relative;
+    width: 800px;
+    height: 450px;
+    margin: 0 auto;
+    overflow: visible;
+}
+
+.seat {
+    position: absolute;
+    width: 10px;  /* Slightly smaller dots */
+    height: 10px; /* Slightly smaller dots */
+    border-radius: 50%;
+    cursor: pointer;
+    transform: translate(-50%, -50%);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.seat:hover {
+    transform: translate(-50%, -50%) scale(1.8);
+    z-index: 10;
+}
+
+.seat.faded {
+    opacity: 0.1; /* Used when filtering */
+}
+
+/* --- PARTY COLORS --- */
+/* You can tweak these hex codes to match exact party branding */
+/* --- PARTY COLORS --- */
+.akp { background-color: #FFCC00; } /* AK Parti Yellow/Orange */
+.chp { background-color: #E3000F; } /* CHP Red */
+.mhp { background-color: #8B0000; } /* MHP Dark Red */
+.dem { background-color: #800080; } /* DEM Purple */
+.iyi { background-color: #00BFFF; } /* IYI Blue */
+.saadet { background-color: #FF1493; } /* Saadet Pink */
+.gelecek { background-color: #2E8B57; } /* Gelecek Green */
+.deva { background-color: #00008B; } /* DEVA Dark Blue */
+.yrp { background-color: #FF0000; } /* Yeniden Refah Red */
+.tip { background-color: #B22222; } /* TİP Firebrick */
+.dp { background-color: #FF4500; } /* DP Orange Red */
+.hudapar { background-color: #008000; } /* HÜDA PAR Green */
+.emep { background-color: #FFD700; } /* EMEP Gold */
+.dbp { background-color: #CCCC00; } /* DBP Yellow-Green */
+.dsp { background-color: #1E90FF; } /* DSP Light Blue */
+.bagimsiz { background-color: #808080; } /* Independent Gray */
+.yeniyol { background-color: #008080; } /* Teal color for Yeni Yol */
+/* --- MODAL (POPUP) --- */
+.modal {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 100;
+}
+
+.modal.hidden { display: none; }
+
+.modal-content {
+    background: #fff;
+    padding: 2rem;
+    border-radius: 10px;
+    width: 90%;
+    max-width: 500px;
+    max-height: 85vh; /* Prevents it from being taller than the screen */
+    position: relative;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    display: flex;
+    flex-direction: column;
+}
+
+.close-btn {
+    position: absolute;
+    top: 10px; right: 15px;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: #888;
+}
+
+.contact-info {
+    background: #f1f1f1;
+    padding: 10px;
+    border-radius: 5px;
+    margin: 15px 0;
+}
+
+.voting-history {
+    overflow-y: auto; /* Adds a scrollbar ONLY to the votes */
+    flex-grow: 1;
+    padding-right: 10px; /* Space for the scrollbar */
+}
+
+.voting-history li {
+    padding: 8px 0;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    justify-content: space-between;
+}
+.vote-kabul { color: green; font-weight: bold; }
+.vote-ret { color: red; font-weight: bold; }
+.vote-katilmadi { color: gray; font-style: italic; }
