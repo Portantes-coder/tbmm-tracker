@@ -42,16 +42,16 @@ input, select {
 /* --- PARLIAMENT MAP --- */
 .parliament-map {
     position: relative;
-    width: 800px;
-    height: 450px;
+    width: 100%;             /* Let it fill the screen on phones */
+    max-width: 800px;        /* Stop it from getting too huge on desktop */
     margin: 0 auto;
     overflow: visible;
 }
 
 .seat {
     position: absolute;
-    width: 10px;  /* Slightly smaller dots */
-    height: 10px; /* Slightly smaller dots */
+    width: 10px;  
+    height: 10px; 
     border-radius: 50%;
     cursor: pointer;
     transform: translate(-50%, -50%);
@@ -64,29 +64,28 @@ input, select {
 }
 
 .seat.faded {
-    opacity: 0.1; /* Used when filtering */
+    opacity: 0.1; 
 }
 
 /* --- PARTY COLORS --- */
-/* You can tweak these hex codes to match exact party branding */
-/* --- PARTY COLORS --- */
-.akp { background-color: #FFCC00; } /* AK Parti Yellow/Orange */
-.chp { background-color: #E3000F; } /* CHP Red */
-.mhp { background-color: #8B0000; } /* MHP Dark Red */
-.dem { background-color: #800080; } /* DEM Purple */
-.iyi { background-color: #00BFFF; } /* IYI Blue */
-.saadet { background-color: #FF1493; } /* Saadet Pink */
-.gelecek { background-color: #2E8B57; } /* Gelecek Green */
-.deva { background-color: #00008B; } /* DEVA Dark Blue */
-.yrp { background-color: #FF0000; } /* Yeniden Refah Red */
-.tip { background-color: #B22222; } /* TİP Firebrick */
-.dp { background-color: #FF4500; } /* DP Orange Red */
-.hudapar { background-color: #008000; } /* HÜDA PAR Green */
-.emep { background-color: #FFD700; } /* EMEP Gold */
-.dbp { background-color: #CCCC00; } /* DBP Yellow-Green */
-.dsp { background-color: #1E90FF; } /* DSP Light Blue */
-.bagimsiz { background-color: #808080; } /* Independent Gray */
-.yeniyol { background-color: #008080; } /* Teal color for Yeni Yol */
+.akp { background-color: #FFCC00; } 
+.chp { background-color: #E3000F; } 
+.mhp { background-color: #8B0000; } 
+.dem { background-color: #800080; } 
+.iyi { background-color: #00BFFF; } 
+.saadet { background-color: #FF1493; } 
+.gelecek { background-color: #2E8B57; } 
+.deva { background-color: #00008B; } 
+.yrp { background-color: #FF0000; } 
+.tip { background-color: #B22222; } 
+.dp { background-color: #FF4500; } 
+.hudapar { background-color: #008000; } 
+.emep { background-color: #FFD700; } 
+.dbp { background-color: #CCCC00; } 
+.dsp { background-color: #1E90FF; } 
+.bagimsiz { background-color: #808080; } 
+.yeniyol { background-color: #008080; } 
+
 /* --- MODAL (POPUP) --- */
 .modal {
     position: fixed;
@@ -106,11 +105,12 @@ input, select {
     border-radius: 10px;
     width: 90%;
     max-width: 500px;
-    max-height: 85vh; /* Prevents it from being taller than the screen */
+    max-height: 85vh; 
     position: relative;
     box-shadow: 0 5px 15px rgba(0,0,0,0.3);
     display: flex;
     flex-direction: column;
+    overflow-y: auto; /* Allows the entire white box to scroll */
 }
 
 .close-btn {
@@ -129,9 +129,8 @@ input, select {
 }
 
 .voting-history {
-    overflow-y: auto; /* Adds a scrollbar ONLY to the votes */
+    margin-top: 15px;
     flex-grow: 1;
-    padding-right: 10px; /* Space for the scrollbar */
 }
 
 .voting-history li {
@@ -139,7 +138,201 @@ input, select {
     border-bottom: 1px solid #eee;
     display: flex;
     justify-content: space-between;
+    align-items: center;
 }
-.vote-kabul { color: green; font-weight: bold; }
-.vote-ret { color: red; font-weight: bold; }
-.vote-katilmadi { color: gray; font-style: italic; }
+
+/* --- EXPORT PANEL --- */
+.export-section {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
+    margin-bottom: 50px;
+}
+
+.export-card {
+    background: #fff;
+    padding: 20px 30px;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    max-width: 800px;
+    width: 90%;
+}
+
+.export-card h2 { margin-top: 0; color: #333; font-size: 1.5rem; }
+.export-card p { font-size: 0.9rem; margin-bottom: 20px; color: #666; }
+
+.export-controls {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+}
+
+.filter-group {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-width: 200px;
+}
+
+.filter-group label {
+    font-weight: bold;
+    margin-bottom: 8px;
+    font-size: 0.9rem;
+}
+
+.filter-group select {
+    padding: 5px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-family: inherit;
+    background-color: #fcfcfc;
+}
+
+/* --- CHECKBOX STYLING --- */
+.group-header {
+    font-weight: bold;
+    margin-bottom: 8px;
+    font-size: 0.9rem;
+    display: block;
+}
+
+.checkbox-box {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    background-color: #fcfcfc;
+    padding: 15px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    height: 100%;
+    box-sizing: border-box;
+}
+
+.checkbox-box label {
+    font-weight: normal;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    margin: 0; 
+    font-size: 0.95rem;
+}
+
+.checkbox-box input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+    margin: 0;
+}
+
+.download-btn {
+    background-color: #28a745;
+    color: white;
+    border: none;
+    padding: 12px 25px;
+    font-size: 1rem;
+    font-weight: bold;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.download-btn:hover { background-color: #218838; }
+
+/* --- MP STATISTICS PANEL --- */
+.stats-panel {
+    border-top: 1px solid #eee;
+    border-bottom: 1px solid #eee;
+    padding: 15px 0;
+}
+
+.stat-box {
+    background: #f8f9fa;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 10px 15px;
+    min-width: 110px;
+    cursor: help;
+}
+
+.stat-value {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #333;
+}
+
+.stat-label {
+    font-size: 0.8rem;
+    color: #666;
+    margin-top: 5px;
+    line-height: 1.2;
+}
+
+/* --- VOTE BADGES --- */
+.vote-kabul { 
+    background-color: #28a745; 
+    color: white; 
+    padding: 4px 12px; 
+    border-radius: 5px; 
+    font-weight: bold; 
+    font-size: 0.85rem; 
+    text-align: center; 
+    min-width: 80px;
+}
+
+.vote-ret { 
+    background-color: #dc3545; 
+    color: white; 
+    padding: 4px 12px; 
+    border-radius: 5px; 
+    font-weight: bold; 
+    font-size: 0.85rem; 
+    text-align: center; 
+    min-width: 80px;
+}
+
+.vote-cekimser {
+    background-color: #fd7e14; 
+    color: white; 
+    padding: 4px 12px; 
+    border-radius: 5px; 
+    font-weight: bold; 
+    font-size: 0.85rem; 
+    text-align: center; 
+    min-width: 80px;
+}
+
+.vote-katilmadi { 
+    background-color: #6c757d; 
+    color: white; 
+    padding: 4px 12px; 
+    border-radius: 5px; 
+    font-size: 0.85rem; 
+    text-align: center; 
+    min-width: 80px;
+}
+
+/* --- MOBILE OPTIMIZATIONS --- */
+@media (max-width: 600px) {
+    .modal-content {
+        width: 95%;
+        padding: 1.5rem 1rem;
+        max-height: 95vh;
+    }
+    
+    .controls {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .controls input, .controls select {
+        width: 100%;
+        max-width: 100%;
+    }
+
+    .export-card {
+        padding: 15px;
+    }
+}

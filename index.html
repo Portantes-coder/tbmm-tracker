@@ -15,12 +15,40 @@
             <input type="text" id="searchInput" placeholder="Milletvekili Ara (örn: Ahmet)...">
             <select id="provinceFilter">
                 <option value="all">Tüm İller</option>
-                </select>
+            </select>
         </div>
     </header>
 
-    <main>
+    <main style="width: 100%; display: flex; flex-direction: column; align-items: center;">
         <div id="parliament-map" class="parliament-map"></div>
+        
+        <section class="export-section">
+            <div class="export-card">
+                <h2>Veri İndir (CSV)</h2>
+                <p>Milletvekili iletişim bilgilerini Excel formatında indirebilirsiniz. (Birden fazla seçim yapmak için bilgisayarınızda CTRL veya CMD tuşuna basılı tutarak tıklayın).</p>
+                
+                <div class="export-controls">
+                    <div class="filter-group">
+                        <label>Partiler:</label>
+                        <select id="exportPartyFilter" multiple size="6"></select>
+                    </div>
+                    
+                    <div class="filter-group">
+                        <label>İller:</label>
+                        <select id="exportProvinceFilter" multiple size="6"></select>
+                    </div>
+                    
+                    <div class="filter-group">
+                        <label class="group-header">İndirilecek Bilgiler:</label>
+                        <div class="checkbox-box">
+                            <label><input type="checkbox" id="colEmail" checked> E-posta</label>
+                            <label><input type="checkbox" id="colPhone" checked> Telefonlar (Tel 1, Tel 2)</label>
+                            <label><input type="checkbox" id="colAddress" checked> Adres</label>
+                        </div>
+                    </div>
+                </div> <button id="downloadCsvBtn" class="download-btn">CSV Olarak İndir</button>
+            </div>
+        </section>
     </main>
 
     <div id="mp-modal" class="modal hidden">
@@ -34,6 +62,22 @@
             <h2 id="modal-name" style="text-align: center; margin-top: 0;">MP Name</h2>
             <h4 id="modal-party-province" style="text-align: center; color: #666;">Party - Province</h4>
             
+            <div class="stats-panel" style="display: flex; justify-content: center; gap: 15px; margin: 20px 0; text-align: center;">
+                <div class="stat-box" title="Sadece Meclis Genel Kurulundaki açık oylamaları kapsar.">
+                    <div class="stat-value" id="stat-attendance">%0</div>
+                    <div class="stat-label">Açık Oylama<br>Katılımı</div>
+                </div>
+                <div class="stat-box" id="stat-dissent-container" title="Kendi partisinin çoğunluk kararından farklı yönde oy kullanma oranı.">
+                    <div class="stat-value" id="stat-dissent">%0</div>
+                    <div class="stat-label">Partiden Farklı<br>Oy Verme</div>
+                </div>
+            </div>
+
+            <div id="share-buttons" style="text-align: center; margin-bottom: 15px;">
+                <button id="btn-whatsapp" style="background: #25D366; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer;">WhatsApp'ta Paylaş</button>
+                <button id="btn-twitter" style="background: #000000; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer;">X'te Paylaş</button>
+            </div>
+            
             <div class="contact-info">
                 <p><strong>E-posta:</strong> <span id="modal-email"></span></p>
                 <p><strong>Telefon:</strong> <span id="modal-phone"></span></p>
@@ -41,9 +85,8 @@
             </div>
 
             <div class="voting-history">
-                <h3>Son Oylamalar</h3>
-                <ul id="modal-votes">
-                    </ul>
+                <h3 style="margin-top: 0;">Son Oylamalar</h3>
+                <ul id="modal-votes"></ul>
             </div>
         </div>
     </div>

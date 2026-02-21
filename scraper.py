@@ -123,5 +123,4 @@ def process_voting_page(url, data):
                 data['mps'][full_name]['votes'][bill_id] = sonuc
 
 if __name__ == "__main__":
-    # Feel free to delete your existing data.json again if you want a totally clean start!
     scrape_tbmm()
