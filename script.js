@@ -21,8 +21,6 @@ const downloadCsvBtn = document.getElementById('downloadCsvBtn');
 // ==========================================
 // 2. HELPER FUNCTIONS
 // ==========================================
-
-// Cleans messy government text encoding and specific typos
 function cleanTurkishText(text) {
     if (!text) return "";
     const txt = document.createElement("textarea");
@@ -37,19 +35,35 @@ function cleanTurkishText(text) {
         .replace(/ÇEKÝMSER/g, 'ÇEKİMSER'); 
 }
 
-// Normalizes text for the search bar (ignores cases and Turkish characters)
 function makeSearchable(text) {
     if (!text) return "";
     return text.toLocaleLowerCase('tr')
         .replace(/ğ/g, 'g').replace(/ü/g, 'u').replace(/ş/g, 's')
         .replace(/ı/g, 'i').replace(/ö/g, 'o').replace(/ç/g, 'c')
-        .replace(/i̇/g, 'i'); // Crucial fix for the uppercase İ bug
+        .replace(/i̇/g, 'i'); 
 }
 
-// Maps party names to correct CSS colors
+function doNamesMatch(name1, name2) {
+    const clean1 = makeSearchable(cleanTurkishText(name1));
+    const clean2 = makeSearchable(cleanTurkishText(name2));
+
+    const n1 = clean1.replace(/\s+/g, ' ').trim().split(' ');
+    const n2 = clean2.replace(/\s+/g, ' ').trim().split(' ');
+
+    if (n1.join('') === n2.join('')) return true;
+
+    const shorter = n1.length < n2.length ? n1 : n2;
+    const longer = n1.length < n2.length ? n2 : n1;
+
+    if (shorter.length >= 2) {
+        const allMatch = shorter.every(part => longer.includes(part));
+        if (allMatch) return true;
+    }
+    return false;
+}
+
 function getPartyClass(partyName) {
     const p = makeSearchable(cleanTurkishText(partyName)); 
-    
     if (p.includes("ak parti") || p.includes("adalet ve kalkinma")) return "akp";
     if (p.includes("chp") || p.includes("cumhuriyet halk")) return "chp";
     if (p.includes("mhp") || p.includes("milliyetci hareket")) return "mhp";
@@ -58,10 +72,8 @@ function getPartyClass(partyName) {
     if (p.includes("saadet")) return "saadet";
     if (p.includes("gelecek")) return "gelecek";
     if (p.includes("deva") || p.includes("atilim")) return "deva";
-    
     if (p.includes("yeni yol")) return "yeniyol"; 
     if (p.includes("yeniden refah")) return "yrp"; 
-    
     if (p.includes("turkiye isci") || p.includes("tip")) return "tip";
     if (p.includes("hur dava") || p.includes("huda")) return "hudapar";
     if (p.includes("demokrat parti") || p.includes("dp")) return "dp";
@@ -72,7 +84,7 @@ function getPartyClass(partyName) {
 }
 
 // ==========================================
-// 3. DATA LOADING & MERGING
+// 3. DATA LOADING & INITIALIZATION
 // ==========================================
 Promise.all([
     fetch('data.json').then(res => res.json()),
@@ -82,17 +94,14 @@ Promise.all([
     contactData = contacts;
     allMPs = [];
 
-    // A. Use the Contact List as the Master List
+    // Master List merging
     for (const [contactName, contactInfo] of Object.entries(contactData)) {
         let mergedVotes = {};
-        const cleanContactName = cleanTurkishText(contactName).toLowerCase();
-
         for (const [voteName, voteInfo] of Object.entries(votingData.mps)) {
-            if (cleanTurkishText(voteName).toLowerCase() === cleanContactName) {
+            if (doNamesMatch(contactName, voteName)) {
                 mergedVotes = { ...mergedVotes, ...voteInfo.votes };
             }
         }
-
         allMPs.push({
             name: contactName,
             party: contactInfo.party,       
@@ -102,7 +111,6 @@ Promise.all([
         });
     }
 
-    // B. Sort MPs based on physical TBMM Seating Order (Left to Right)
     const partySeatingOrder = {
         "tip": 1, "dbp": 2, "emep": 3, "dem": 4, 
         "chp": 5, "dsp": 6, "iyi": 7, "dp": 8, 
@@ -114,16 +122,11 @@ Promise.all([
     allMPs.sort((a, b) => {
         const orderA = partySeatingOrder[getPartyClass(a.party)] || 99;
         const orderB = partySeatingOrder[getPartyClass(b.party)] || 99;
-        
-        if (orderA === orderB) {
-            return cleanTurkishText(a.name).localeCompare(cleanTurkishText(b.name), 'tr');
-        }
+        if (orderA === orderB) return cleanTurkishText(a.name).localeCompare(cleanTurkishText(b.name), 'tr');
         return orderA - orderB;
     });
 
-    console.log(`Successfully loaded and merged ${allMPs.length} active MPs!`);
-
-    // --- NEW: CALCULATE PARTY MAJORITIES FOR EVERY BILL ---
+    // --- CALCULATE PARTY MAJORITIES ---
     partyMajorityPerBill = {};
     for (const billId of Object.keys(votingData.bills)) {
         partyMajorityPerBill[billId] = {};
@@ -158,26 +161,101 @@ Promise.all([
             partyMajorityPerBill[billId][party] = maxVote;
         }
     }
-    // --- END PARTY MAJORITY CALCULATION ---
 
-    // C. Initialize the User Interface
+    // --- NEW: CALCULATE OVERALL PARTY STATS FOR SIDEBAR ---
+    const partyDissentStats = {};
+    allMPs.forEach(mp => {
+        const partyClass = getPartyClass(mp.party);
+        if (partyClass === 'bagimsiz') return;
+
+        if (!partyDissentStats[partyClass]) {
+            partyDissentStats[partyClass] = { total: 0, dissent: 0, rawName: cleanTurkishText(mp.party) };
+        }
+
+        for (const billId of Object.keys(votingData.bills)) {
+            const rawVote = mp.votes[billId];
+            if (!rawVote) continue;
+
+            let voteType = "katilmadi";
+            const cleanVote = cleanTurkishText(rawVote).toLowerCase();
+            if (cleanVote.includes("kabul")) voteType = "kabul";
+            else if (cleanVote.includes("ret") || cleanVote.includes("red")) voteType = "ret";
+            else if (cleanVote.includes("çekimser") || cleanVote.includes("cekimser")) voteType = "cekimser";
+
+            if (voteType !== "katilmadi") {
+                // Bulletproof fallback logic
+                const majority = partyMajorityPerBill[billId] ? partyMajorityPerBill[billId][partyClass] : null;
+                if (majority) {
+                    partyDissentStats[partyClass].total++;
+                    if (voteType !== majority) {
+                        partyDissentStats[partyClass].dissent++;
+                    }
+                }
+            }
+        }
+    });
+
+    const partyStatsList = document.getElementById('party-stats-list');
+    if (partyStatsList) {
+        const statsArray = Object.keys(partyDissentStats).map(key => {
+            const data = partyDissentStats[key];
+            const percent = data.total === 0 ? 0 : (data.dissent / data.total) * 100;
+            return { partyClass: key, name: data.rawName, percent: percent, total: data.total };
+        }).filter(stat => stat.total > 0); 
+
+        statsArray.sort((a, b) => b.percent - a.percent);
+
+        statsArray.forEach(stat => {
+            const li = document.createElement('li');
+            li.innerHTML = `
+                <span style="display: flex; align-items: center; gap: 10px;">
+                    <div style="width: 14px; height: 14px; border-radius: 50%;" class="${stat.partyClass}"></div>
+                    ${stat.name}
+                </span>
+                <span class="stat-badge">%${stat.percent.toFixed(1)}</span>
+            `;
+            partyStatsList.appendChild(li);
+        });
+    }
+
+    // Setup UI
     populateProvinceFilter();
     populateExportFilters();
     drawParliament(allMPs);
 
-    // D. Check if the user loaded the page from a shared link
+    // Deep Link & Intro Check
     const hash = window.location.hash;
     if (hash && hash.startsWith('#mp=')) {
         const targetMpSlug = hash.replace('#mp=', '');
         const targetMp = allMPs.find(m => makeSearchable(m.name).replace(/\s+/g, '-') === targetMpSlug);
-        if (targetMp) {
-            showModal(targetMp); 
+        if (targetMp) showModal(targetMp); 
+    } else {
+        // Wrap localStorage in a try/catch. Some local browsers block it for security.
+        try {
+            if (!localStorage.getItem('tbmmIntroSeen')) {
+                document.getElementById('intro-modal').classList.remove('hidden');
+            }
+        } catch (e) {
+            document.getElementById('intro-modal').classList.remove('hidden');
         }
     }
 });
 
+// --- Intro Modal Logic ---
+const closeIntroBtn = document.getElementById('closeIntroBtn');
+if (closeIntroBtn) {
+    closeIntroBtn.addEventListener('click', () => {
+        document.getElementById('intro-modal').classList.add('hidden');
+        try {
+            localStorage.setItem('tbmmIntroSeen', 'true');
+        } catch (e) {
+            // Silently fail if local storage is restricted
+        }
+    });
+}
+
 // ==========================================
-// 4. DRAWING THE PARLIAMENT (MOBILE RESPONSIVE)
+// 4. DRAWING THE PARLIAMENT
 // ==========================================
 function drawParliament(mpsToDraw) {
     mapDiv.innerHTML = ''; 
@@ -193,7 +271,6 @@ function drawParliament(mpsToDraw) {
     const centerY = maxRadius + 30; 
     
     mapDiv.style.height = `${centerY + 10}px`;
-
     const seatSize = containerWidth < 500 ? 6 : 10;
 
     let seatCoords = [];
@@ -212,7 +289,6 @@ function drawParliament(mpsToDraw) {
             const angle = Math.PI - (s / (seatsInRow - 1)) * Math.PI;
             const x = centerX + (radius * Math.cos(angle)); 
             const y = centerY - (radius * Math.sin(angle));
-            
             seatCoords.push({ x, y, angle, radius });
         }
         seatsGenerated += seatsInRow;
@@ -248,8 +324,7 @@ function drawParliament(mpsToDraw) {
 // 5. MODAL (POPUP) LOGIC
 // ==========================================
 function showModal(mp) {
-    // --- INDIVIDUAL MP STATS ---
-    const totalBills = Object.keys(votingData.bills).length;
+    let validBillsForMp = 0; 
     let attendedCount = 0;
     let differentFromPartyCount = 0;
     let validPartyVotes = 0;
@@ -257,14 +332,17 @@ function showModal(mp) {
 
     for (const billId of Object.keys(votingData.bills)) {
         const rawVote = mp.votes[billId];
-        let voteType = "katilmadi";
         
-        if (rawVote) {
-            const cleanVote = cleanTurkishText(rawVote).toLowerCase();
-            if (cleanVote.includes("kabul")) voteType = "kabul";
-            else if (cleanVote.includes("ret") || cleanVote.includes("red")) voteType = "ret";
-            else if (cleanVote.includes("çekimser") || cleanVote.includes("cekimser")) voteType = "cekimser";
-        }
+        if (rawVote === undefined) continue; 
+        
+        validBillsForMp++; 
+
+        let voteType = "katilmadi";
+        const cleanVote = cleanTurkishText(rawVote).toLowerCase();
+        
+        if (cleanVote.includes("kabul")) voteType = "kabul";
+        else if (cleanVote.includes("ret") || cleanVote.includes("red")) voteType = "ret";
+        else if (cleanVote.includes("çekimser") || cleanVote.includes("cekimser")) voteType = "cekimser";
 
         if (voteType !== "katilmadi") {
             attendedCount++;
@@ -281,7 +359,7 @@ function showModal(mp) {
         }
     }
 
-    const attendanceRate = totalBills === 0 ? 0 : Math.round((attendedCount / totalBills) * 100);
+    const attendanceRate = validBillsForMp === 0 ? 0 : Math.round((attendedCount / validBillsForMp) * 100);
     const dissentRate = validPartyVotes === 0 ? 0 : Math.round((differentFromPartyCount / validPartyVotes) * 100);
 
     document.getElementById('stat-attendance').innerText = `%${attendanceRate}`;
@@ -293,10 +371,8 @@ function showModal(mp) {
         document.getElementById('stat-dissent').innerText = `%${dissentRate}`;
     }
 
-    // 1. Update the URL for Deep Linking
     window.history.pushState(null, null, `#mp=${makeSearchable(mp.name).replace(/\s+/g, '-')}`);
 
-    // 2. Populate text and images
     document.getElementById('modal-name').innerText = cleanTurkishText(mp.name);
     document.getElementById('modal-party-province').innerText = `${cleanTurkishText(mp.party)} - ${cleanTurkishText(mp.province)}`;
     
@@ -308,7 +384,6 @@ function showModal(mp) {
     document.getElementById('modal-phone').innerText = (contact.telephones && contact.telephones.length > 0) ? contact.telephones.join(", ") : "Bilinmiyor";
     document.getElementById('modal-address').innerText = contact.address || "Bilinmiyor";
 
-    // 3. Setup Share Buttons
     const currentUrl = encodeURIComponent(window.location.href);
     const shareText = encodeURIComponent(`${cleanTurkishText(mp.name)}'nin TBMM oylama geçmişini ve iletişim bilgilerini inceleyin: `);
     
@@ -317,7 +392,6 @@ function showModal(mp) {
     if (btnWhatsapp) btnWhatsapp.onclick = () => window.open(`https://api.whatsapp.com/send?text=${shareText}${currentUrl}`);
     if (btnTwitter) btnTwitter.onclick = () => window.open(`https://twitter.com/intent/tweet?text=${shareText}&url=${currentUrl}`);
 
-    // 4. Build Voting History
     const votesList = document.getElementById('modal-votes');
     votesList.innerHTML = ''; 
     
@@ -326,7 +400,6 @@ function showModal(mp) {
         if (!billInfo) continue; 
 
         const li = document.createElement('li');
-        
         let voteClass = "vote-katilmadi";
         let displayVoteText = "Katılmadı"; 
 
@@ -355,14 +428,12 @@ function showModal(mp) {
             </a> 
             <span class="${voteClass}">${displayVoteText}</span>
         `;
-        
         votesList.appendChild(li); 
     }
 
     modal.classList.remove('hidden');
 }
 
-// Close Modal Events
 function closeAndClearModal() {
     modal.classList.add('hidden');
     window.history.pushState(null, null, ' '); 
@@ -374,13 +445,10 @@ modal.addEventListener('click', (e) => {
 });
 
 // ==========================================
-// 6. FILTERING & SEARCH LOGIC
+// 6. FILTERING, EXPORT, RESIZE LOGIC
 // ==========================================
 function populateProvinceFilter() {
-    const provinces = [...new Set(allMPs.map(mp => cleanTurkishText(mp.province)))];
-    
-    provinces.sort((a, b) => a.localeCompare(b, 'tr'));
-    
+    const provinces = [...new Set(allMPs.map(mp => cleanTurkishText(mp.province)))].sort((a, b) => a.localeCompare(b, 'tr'));
     provinces.forEach(prov => {
         const option = document.createElement('option');
         option.value = prov;
@@ -396,7 +464,6 @@ function filterSeats() {
 
     allSeatElements.forEach(seat => {
         const normalizedSeatName = makeSearchable(seat.dataset.name);
-        
         const matchesName = normalizedSeatName.includes(searchTerm);
         const matchesProv = selectedProv === "all" || cleanTurkishText(seat.dataset.province) === selectedProv;
         
@@ -413,31 +480,23 @@ function filterSeats() {
 searchInput.addEventListener('input', filterSeats);
 provinceFilter.addEventListener('change', filterSeats);
 
-// ==========================================
-// 7. CSV EXPORT LOGIC
-// ==========================================
 function populateExportFilters() {
     const provinces = [...new Set(allMPs.map(mp => cleanTurkishText(mp.province)))].sort((a, b) => a.localeCompare(b, 'tr'));
     provinces.forEach(prov => {
-        const option = document.createElement('option');
-        option.value = prov;
-        option.innerText = prov;
+        const option = document.createElement('option'); option.value = prov; option.innerText = prov;
         exportProvinceFilter.appendChild(option);
     });
 
     const parties = [...new Set(allMPs.map(mp => cleanTurkishText(mp.party)))].sort((a, b) => a.localeCompare(b, 'tr'));
     parties.forEach(party => {
-        const option = document.createElement('option');
-        option.value = party;
-        option.innerText = party;
+        const option = document.createElement('option'); option.value = party; option.innerText = party;
         exportPartyFilter.appendChild(option);
     });
 }
 
 function escapeCSV(text) {
     if (!text) return '""';
-    const str = String(text).replace(/"/g, '""');
-    return `"${str}"`;
+    return `"${String(text).replace(/"/g, '""')}"`;
 }
 
 downloadCsvBtn.addEventListener('click', () => {
@@ -450,38 +509,24 @@ downloadCsvBtn.addEventListener('click', () => {
         return partyMatch && provMatch;
     });
 
-    if (mpsToExport.length === 0) {
-        alert("Seçtiğiniz filtrelere uygun milletvekili bulunamadı.");
-        return;
-    }
+    if (mpsToExport.length === 0) return alert("Seçtiğiniz filtrelere uygun milletvekili bulunamadı.");
 
     let headers = ["İsim", "Parti", "İl"];
     if (colEmail.checked) headers.push("E-posta");
-    if (colPhone.checked) {
-        headers.push("Telefon 1");
-        headers.push("Telefon 2");
-    }
+    if (colPhone.checked) { headers.push("Telefon 1"); headers.push("Telefon 2"); }
     if (colAddress.checked) headers.push("Adres");
 
     let csvContent = headers.join(",") + "\r\n";
 
     mpsToExport.forEach(mp => {
         const contact = mp.contact || {};
-        let row = [
-            escapeCSV(cleanTurkishText(mp.name)),
-            escapeCSV(cleanTurkishText(mp.party)),
-            escapeCSV(cleanTurkishText(mp.province))
-        ];
+        let row = [ escapeCSV(cleanTurkishText(mp.name)), escapeCSV(cleanTurkishText(mp.party)), escapeCSV(cleanTurkishText(mp.province)) ];
 
         if (colEmail.checked) row.push(escapeCSV(contact.email || ""));
-        
         if (colPhone.checked) {
-            const tel1 = (contact.telephones && contact.telephones.length > 0) ? contact.telephones[0] : "";
-            const tel2 = (contact.telephones && contact.telephones.length > 1) ? contact.telephones[1] : "";
-            row.push(escapeCSV(tel1));
-            row.push(escapeCSV(tel2));
+            row.push(escapeCSV((contact.telephones && contact.telephones.length > 0) ? contact.telephones[0] : ""));
+            row.push(escapeCSV((contact.telephones && contact.telephones.length > 1) ? contact.telephones[1] : ""));
         }
-
         if (colAddress.checked) row.push(escapeCSV(contact.address || ""));
 
         csvContent += row.join(",") + "\r\n";
@@ -490,24 +535,14 @@ downloadCsvBtn.addEventListener('click', () => {
     const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
-    
-    a.href = url;
-    a.download = "tbmm_iletisim_bilgileri.csv";
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
+    a.href = url; a.download = "tbmm_iletisim_bilgileri.csv";
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
 });
 
-// ==========================================
-// 8. MOBILE RESIZE LISTENER
-// ==========================================
 let resizeTimer;
 window.addEventListener('resize', () => {
     clearTimeout(resizeTimer);
     resizeTimer = setTimeout(() => {
-        if (allMPs.length > 0) {
-            drawParliament(allMPs); 
-            filterSeats(); 
-        }
+        if (allMPs.length > 0) { drawParliament(allMPs); filterSeats(); }
     }, 250);
 });

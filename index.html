@@ -19,6 +19,12 @@
         </div>
     </header>
 
+    <aside id="party-stats-sidebar" class="party-stats-sidebar">
+        <h3>Parti İçi Farklı Oy Oranları</h3>
+        <p class="stats-desc">Parti grubunun meclisteki çoğunluk kararına uymama (bağımsız oy kullanma) oranları.</p>
+        <ul id="party-stats-list"></ul>
+    </aside>
+
     <main style="width: 100%; display: flex; flex-direction: column; align-items: center;">
         <div id="parliament-map" class="parliament-map"></div>
         
@@ -46,7 +52,9 @@
                             <label><input type="checkbox" id="colAddress" checked> Adres</label>
                         </div>
                     </div>
-                </div> <button id="downloadCsvBtn" class="download-btn">CSV Olarak İndir</button>
+                </div>
+                
+                <button id="downloadCsvBtn" class="download-btn">CSV Olarak İndir</button>
             </div>
         </section>
     </main>
@@ -88,6 +96,19 @@
                 <h3 style="margin-top: 0;">Son Oylamalar</h3>
                 <ul id="modal-votes"></ul>
             </div>
+        </div>
+    </div>
+
+    <div id="intro-modal" class="modal hidden">
+        <div class="modal-content" style="max-width: 600px; text-align: center;">
+            <h2 style="color: #b30000;">TBMM Şeffaflık Platformuna Hoş Geldiniz</h2>
+            <p style="text-align: left; line-height: 1.6; color: #444;">
+                Bu platform, Türkiye Büyük Millet Meclisi'ndeki milletvekillerinin genel kurul açık oylama geçmişlerini ve iletişim bilgilerini şeffaf bir şekilde sunmayı amaçlar.
+            </p>
+            <div style="background: #fff3cd; color: #856404; padding: 15px; border-left: 4px solid #ffeeba; border-radius: 4px; text-align: left; margin: 20px 0; font-size: 0.9rem;">
+                <strong>Önemli Bir Not:</strong> Bir milletvekilinin <em>"Açık Oylama Katılımı"</em> oranının düşük olması, görevini yapmadığı anlamına gelmez. Milletvekilleri komisyon çalışmalarında, parti liderliğinde, saha görevlerinde veya yurtdışı temsilciliklerinde yoğun olarak çalışmaktadır. Açık oylamalar, meclis mesaisinin sadece bir kısmını oluşturur.
+            </div>
+            <button id="closeIntroBtn" class="download-btn" style="margin-top: 10px; width: 100%;">Anladım, Siteye Devam Et</button>
         </div>
     </div>
 
