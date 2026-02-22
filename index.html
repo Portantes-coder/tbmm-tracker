@@ -29,33 +29,40 @@
         <div id="parliament-map" class="parliament-map"></div>
         
         <section class="export-section">
-            <div class="export-card">
-                <h2>Veri İndir (CSV)</h2>
-                <p>Milletvekili iletişim bilgilerini Excel formatında indirebilirsiniz. (Birden fazla seçim yapmak için bilgisayarınızda CTRL veya CMD tuşuna basılı tutarak tıklayın).</p>
+            <details class="export-card">
                 
-                <div class="export-controls">
-                    <div class="filter-group">
-                        <label>Partiler:</label>
-                        <select id="exportPartyFilter" multiple size="6"></select>
-                    </div>
+                <summary class="export-summary">
+                    <h2>Veri İndir (CSV)</h2>
+                    <span class="toggle-icon">▼</span>
+                </summary>
+                
+                <div class="export-content">
+                    <p>Milletvekili iletişim bilgilerini Excel formatında indirebilirsiniz. (Birden fazla seçim yapmak için bilgisayarınızda CTRL veya CMD tuşuna basılı tutarak tıklayın).</p>
                     
-                    <div class="filter-group">
-                        <label>İller:</label>
-                        <select id="exportProvinceFilter" multiple size="6"></select>
-                    </div>
-                    
-                    <div class="filter-group">
-                        <label class="group-header">İndirilecek Bilgiler:</label>
-                        <div class="checkbox-box">
-                            <label><input type="checkbox" id="colEmail" checked> E-posta</label>
-                            <label><input type="checkbox" id="colPhone" checked> Telefonlar (Tel 1, Tel 2)</label>
-                            <label><input type="checkbox" id="colAddress" checked> Adres</label>
+                    <div class="export-controls">
+                        <div class="filter-group">
+                            <label>Partiler:</label>
+                            <select id="exportPartyFilter" multiple size="6"></select>
+                        </div>
+                        
+                        <div class="filter-group">
+                            <label>İller:</label>
+                            <select id="exportProvinceFilter" multiple size="6"></select>
+                        </div>
+                        
+                        <div class="filter-group">
+                            <label class="group-header">İndirilecek Bilgiler:</label>
+                            <div class="checkbox-box">
+                                <label><input type="checkbox" id="colEmail" checked> E-posta</label>
+                                <label><input type="checkbox" id="colPhone" checked> Telefonlar (Tel 1, Tel 2)</label>
+                                <label><input type="checkbox" id="colAddress" checked> Adres</label>
+                            </div>
                         </div>
                     </div>
+                    
+                    <button id="downloadCsvBtn" class="download-btn">CSV Olarak İndir</button>
                 </div>
-                
-                <button id="downloadCsvBtn" class="download-btn">CSV Olarak İndir</button>
-            </div>
+            </details>
         </section>
     </main>
 

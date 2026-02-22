@@ -152,15 +152,52 @@ input, select {
 
 .export-card {
     background: #fff;
-    padding: 20px 30px;
     border-radius: 10px;
     box-shadow: 0 4px 10px rgba(0,0,0,0.1);
     max-width: 800px;
     width: 90%;
+    overflow: hidden; /* Keeps the rounded corners neat when collapsed */
 }
 
-.export-card h2 { margin-top: 0; color: #333; font-size: 1.5rem; }
-.export-card p { font-size: 0.9rem; margin-bottom: 20px; color: #666; }
+/* The clickable header */
+.export-summary {
+    padding: 15px 30px;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    list-style: none; /* Hides default browser arrow */
+    background-color: #f8f9fa;
+    transition: background-color 0.2s;
+}
+
+.export-summary::-webkit-details-marker {
+    display: none; /* Hides default arrow in Safari/Chrome */
+}
+
+.export-summary:hover {
+    background-color: #f1f3f5;
+}
+
+.export-summary h2 { margin: 0; color: #333; font-size: 1.3rem; }
+
+.toggle-icon {
+    font-size: 1.2rem;
+    color: #666;
+    transition: transform 0.3s ease;
+}
+
+/* Rotates the arrow when the details tag is open */
+details[open] .toggle-icon {
+    transform: rotate(180deg);
+}
+
+.export-content {
+    padding: 20px 30px;
+    border-top: 1px solid #eee;
+}
+
+.export-content p { font-size: 0.9rem; margin-top: 0; margin-bottom: 20px; color: #666; }
 
 .export-controls {
     display: flex;
