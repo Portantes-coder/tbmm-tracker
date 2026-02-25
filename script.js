@@ -183,7 +183,6 @@ Promise.all([
             else if (cleanVote.includes("çekimser") || cleanVote.includes("cekimser")) voteType = "cekimser";
 
             if (voteType !== "katilmadi") {
-                // Bulletproof fallback logic
                 const majority = partyMajorityPerBill[billId] ? partyMajorityPerBill[billId][partyClass] : null;
                 if (majority) {
                     partyDissentStats[partyClass].total++;
@@ -230,7 +229,6 @@ Promise.all([
         const targetMp = allMPs.find(m => makeSearchable(m.name).replace(/\s+/g, '-') === targetMpSlug);
         if (targetMp) showModal(targetMp); 
     } else {
-        // Wrap localStorage in a try/catch. Some local browsers block it for security.
         try {
             if (!localStorage.getItem('tbmmIntroSeen')) {
                 document.getElementById('intro-modal').classList.remove('hidden');
@@ -539,10 +537,25 @@ downloadCsvBtn.addEventListener('click', () => {
     document.body.appendChild(a); a.click(); document.body.removeChild(a);
 });
 
+// ==========================================
+// 7. MOBILE RESIZE LISTENER (OPTIMIZED)
+// ==========================================
 let resizeTimer;
+let lastWindowWidth = window.innerWidth; // Remembers the starting width
+
 window.addEventListener('resize', () => {
     clearTimeout(resizeTimer);
     resizeTimer = setTimeout(() => {
-        if (allMPs.length > 0) { drawParliament(allMPs); filterSeats(); }
+        const currentWidth = window.innerWidth;
+        
+        // ONLY redraw if the width actually changed (ignores vertical scrolling on phones)
+        if (currentWidth !== lastWindowWidth) {
+            lastWindowWidth = currentWidth;
+            
+            if (allMPs.length > 0) { 
+                drawParliament(allMPs); 
+                filterSeats(); 
+            }
+        }
     }, 250);
 });
