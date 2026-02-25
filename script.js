@@ -217,7 +217,7 @@ Promise.all([
         });
     }
 
-    // Setup UI
+    // Setup UI with Fail-Safes
     populateProvinceFilter();
     populateExportFilters();
     drawParliament(allMPs);
@@ -231,19 +231,24 @@ Promise.all([
     } else {
         try {
             if (!localStorage.getItem('tbmmIntroSeen')) {
-                document.getElementById('intro-modal').classList.remove('hidden');
+                const intro = document.getElementById('intro-modal');
+                if (intro) intro.classList.remove('hidden');
             }
         } catch (e) {
-            document.getElementById('intro-modal').classList.remove('hidden');
+            const intro = document.getElementById('intro-modal');
+            if (intro) intro.classList.remove('hidden');
         }
     }
+}).catch(error => {
+    console.error("Data Load Error:", error);
 });
 
 // --- Intro Modal Logic ---
 const closeIntroBtn = document.getElementById('closeIntroBtn');
 if (closeIntroBtn) {
     closeIntroBtn.addEventListener('click', () => {
-        document.getElementById('intro-modal').classList.add('hidden');
+        const intro = document.getElementById('intro-modal');
+        if (intro) intro.classList.add('hidden');
         try {
             localStorage.setItem('tbmmIntroSeen', 'true');
         } catch (e) {
@@ -256,13 +261,13 @@ if (closeIntroBtn) {
 // 4. DRAWING THE PARLIAMENT
 // ==========================================
 function drawParliament(mpsToDraw) {
+    if (!mapDiv) return; // Fail-safe
+    
     mapDiv.innerHTML = ''; 
     
     const totalSeats = mpsToDraw.length;
     const rows = 12; 
     
-    // BULLETPROOF MOBILE MATH: 
-    // Measure the div, but NEVER let it be wider than the actual physical phone screen minus a 20px safety gap
     let containerWidth = mapDiv.clientWidth || 800;
     if (containerWidth > window.innerWidth) {
         containerWidth = window.innerWidth - 20; 
@@ -328,6 +333,8 @@ function drawParliament(mpsToDraw) {
 // 5. MODAL (POPUP) LOGIC
 // ==========================================
 function showModal(mp) {
+    if (!modal) return; // Fail-safe
+    
     let validBillsForMp = 0; 
     let attendedCount = 0;
     let differentFromPartyCount = 0;
@@ -366,27 +373,41 @@ function showModal(mp) {
     const attendanceRate = validBillsForMp === 0 ? 0 : Math.round((attendedCount / validBillsForMp) * 100);
     const dissentRate = validPartyVotes === 0 ? 0 : Math.round((differentFromPartyCount / validPartyVotes) * 100);
 
-    document.getElementById('stat-attendance').innerText = `%${attendanceRate}`;
+    const statAtt = document.getElementById('stat-attendance');
+    if (statAtt) statAtt.innerText = `%${attendanceRate}`;
     
-    if (mpPartyClass === "bagimsiz") {
-        document.getElementById('stat-dissent-container').style.display = 'none';
-    } else {
-        document.getElementById('stat-dissent-container').style.display = 'block';
-        document.getElementById('stat-dissent').innerText = `%${dissentRate}`;
+    const dissentCont = document.getElementById('stat-dissent-container');
+    const statDissent = document.getElementById('stat-dissent');
+    if (dissentCont && statDissent) {
+        if (mpPartyClass === "bagimsiz") {
+            dissentCont.style.display = 'none';
+        } else {
+            dissentCont.style.display = 'block';
+            statDissent.innerText = `%${dissentRate}`;
+        }
     }
 
     window.history.pushState(null, null, `#mp=${makeSearchable(mp.name).replace(/\s+/g, '-')}`);
 
-    document.getElementById('modal-name').innerText = cleanTurkishText(mp.name);
-    document.getElementById('modal-party-province').innerText = `${cleanTurkishText(mp.party)} - ${cleanTurkishText(mp.province)}`;
+    const mName = document.getElementById('modal-name');
+    if (mName) mName.innerText = cleanTurkishText(mp.name);
+    
+    const mPartyProv = document.getElementById('modal-party-province');
+    if (mPartyProv) mPartyProv.innerText = `${cleanTurkishText(mp.party)} - ${cleanTurkishText(mp.province)}`;
     
     const contact = mp.contact || {};
     const defaultImage = "https://cdn.tbmm.gov.tr/TBMMWeb/resim/mv_resim_default.png";
-    document.getElementById('modal-image').src = contact.image_url || defaultImage;
+    const mImage = document.getElementById('modal-image');
+    if (mImage) mImage.src = contact.image_url || defaultImage;
 
-    document.getElementById('modal-email').innerText = contact.email || "Bilinmiyor";
-    document.getElementById('modal-phone').innerText = (contact.telephones && contact.telephones.length > 0) ? contact.telephones.join(", ") : "Bilinmiyor";
-    document.getElementById('modal-address').innerText = contact.address || "Bilinmiyor";
+    const mEmail = document.getElementById('modal-email');
+    if (mEmail) mEmail.innerText = contact.email || "Bilinmiyor";
+    
+    const mPhone = document.getElementById('modal-phone');
+    if (mPhone) mPhone.innerText = (contact.telephones && contact.telephones.length > 0) ? contact.telephones.join(", ") : "Bilinmiyor";
+    
+    const mAddress = document.getElementById('modal-address');
+    if (mAddress) mAddress.innerText = contact.address || "Bilinmiyor";
 
     const currentUrl = encodeURIComponent(window.location.href);
     const shareText = encodeURIComponent(`${cleanTurkishText(mp.name)}'nin TBMM oylama geçmişini ve iletişim bilgilerini inceleyin: `);
@@ -397,61 +418,66 @@ function showModal(mp) {
     if (btnTwitter) btnTwitter.onclick = () => window.open(`https://twitter.com/intent/tweet?text=${shareText}&url=${currentUrl}`);
 
     const votesList = document.getElementById('modal-votes');
-    votesList.innerHTML = ''; 
-    
-    for (const [billId, voteResult] of Object.entries(mp.votes)) {
-        const billInfo = votingData.bills[billId];
-        if (!billInfo) continue; 
-
-        const li = document.createElement('li');
-        let voteClass = "vote-katilmadi";
-        let displayVoteText = "Katılmadı"; 
-
-        const cleanVote = cleanTurkishText(voteResult).toLowerCase();
+    if (votesList) {
+        votesList.innerHTML = ''; 
         
-        if (cleanVote.includes("kabul")) {
-            voteClass = "vote-kabul";
-            displayVoteText = "Kabul";
-        } else if (cleanVote.includes("ret") || cleanVote.includes("red")) {
-            voteClass = "vote-ret";
-            displayVoteText = "Ret";
-        } else if (cleanVote.includes("çekimser") || cleanVote.includes("cekimser")) {
-            voteClass = "vote-cekimser";
-            displayVoteText = "Çekimser";
+        for (const [billId, voteResult] of Object.entries(mp.votes)) {
+            const billInfo = votingData.bills[billId];
+            if (!billInfo) continue; 
+
+            const li = document.createElement('li');
+            let voteClass = "vote-katilmadi";
+            let displayVoteText = "Katılmadı"; 
+
+            const cleanVote = cleanTurkishText(voteResult).toLowerCase();
+            
+            if (cleanVote.includes("kabul")) {
+                voteClass = "vote-kabul";
+                displayVoteText = "Kabul";
+            } else if (cleanVote.includes("ret") || cleanVote.includes("red")) {
+                voteClass = "vote-ret";
+                displayVoteText = "Ret";
+            } else if (cleanVote.includes("çekimser") || cleanVote.includes("cekimser")) {
+                voteClass = "vote-cekimser";
+                displayVoteText = "Çekimser";
+            }
+
+            let cleanBillTitle = cleanTurkishText(billInfo.title);
+            let shortTitle = cleanBillTitle.substring(0, 45) + "...";
+
+            const exactSearchTerm = `"${cleanBillTitle}"`;
+            const searchUrl = `https://www.tbmm.gov.tr/Arama/Sonuc?q=${encodeURIComponent(exactSearchTerm)}`;
+            
+            li.innerHTML = `
+                <a href="${searchUrl}" target="_blank" style="text-decoration: none; color: #0056b3; font-weight: 500;" title="${cleanBillTitle}">
+                    ${shortTitle}
+                </a> 
+                <span class="${voteClass}">${displayVoteText}</span>
+            `;
+            votesList.appendChild(li); 
         }
-
-        let cleanBillTitle = cleanTurkishText(billInfo.title);
-        let shortTitle = cleanBillTitle.substring(0, 45) + "...";
-
-        const exactSearchTerm = `"${cleanBillTitle}"`;
-        const searchUrl = `https://www.tbmm.gov.tr/Arama/Sonuc?q=${encodeURIComponent(exactSearchTerm)}`;
-        
-        li.innerHTML = `
-            <a href="${searchUrl}" target="_blank" style="text-decoration: none; color: #0056b3; font-weight: 500;" title="${cleanBillTitle}">
-                ${shortTitle}
-            </a> 
-            <span class="${voteClass}">${displayVoteText}</span>
-        `;
-        votesList.appendChild(li); 
     }
 
     modal.classList.remove('hidden');
 }
 
 function closeAndClearModal() {
-    modal.classList.add('hidden');
+    if (modal) modal.classList.add('hidden');
     window.history.pushState(null, null, ' '); 
 }
 
-closeModal.addEventListener('click', closeAndClearModal);
-modal.addEventListener('click', (e) => { 
-    if (e.target === modal) closeAndClearModal(); 
-});
+if (closeModal) closeModal.addEventListener('click', closeAndClearModal);
+if (modal) {
+    modal.addEventListener('click', (e) => { 
+        if (e.target === modal) closeAndClearModal(); 
+    });
+}
 
 // ==========================================
 // 6. FILTERING, EXPORT, RESIZE LOGIC
 // ==========================================
 function populateProvinceFilter() {
+    if (!provinceFilter) return; // Fail-safe
     const provinces = [...new Set(allMPs.map(mp => cleanTurkishText(mp.province)))].sort((a, b) => a.localeCompare(b, 'tr'));
     provinces.forEach(prov => {
         const option = document.createElement('option');
@@ -462,6 +488,7 @@ function populateProvinceFilter() {
 }
 
 function filterSeats() {
+    if (!searchInput || !provinceFilter) return; // Fail-safe
     const searchTerm = makeSearchable(searchInput.value); 
     const selectedProv = provinceFilter.value;
     const allSeatElements = document.querySelectorAll('.seat');
@@ -481,10 +508,11 @@ function filterSeats() {
     });
 }
 
-searchInput.addEventListener('input', filterSeats);
-provinceFilter.addEventListener('change', filterSeats);
+if (searchInput) searchInput.addEventListener('input', filterSeats);
+if (provinceFilter) provinceFilter.addEventListener('change', filterSeats);
 
 function populateExportFilters() {
+    if (!exportProvinceFilter || !exportPartyFilter) return; // Fail-safe
     const provinces = [...new Set(allMPs.map(mp => cleanTurkishText(mp.province)))].sort((a, b) => a.localeCompare(b, 'tr'));
     provinces.forEach(prov => {
         const option = document.createElement('option'); option.value = prov; option.innerText = prov;
@@ -503,58 +531,59 @@ function escapeCSV(text) {
     return `"${String(text).replace(/"/g, '""')}"`;
 }
 
-downloadCsvBtn.addEventListener('click', () => {
-    const selectedParties = Array.from(exportPartyFilter.selectedOptions).map(opt => opt.value);
-    const selectedProvinces = Array.from(exportProvinceFilter.selectedOptions).map(opt => opt.value);
+if (downloadCsvBtn) {
+    downloadCsvBtn.addEventListener('click', () => {
+        const selectedParties = Array.from(exportPartyFilter.selectedOptions).map(opt => opt.value);
+        const selectedProvinces = Array.from(exportProvinceFilter.selectedOptions).map(opt => opt.value);
 
-    const mpsToExport = allMPs.filter(mp => {
-        const partyMatch = selectedParties.length === 0 || selectedParties.includes(cleanTurkishText(mp.party));
-        const provMatch = selectedProvinces.length === 0 || selectedProvinces.includes(cleanTurkishText(mp.province));
-        return partyMatch && provMatch;
+        const mpsToExport = allMPs.filter(mp => {
+            const partyMatch = selectedParties.length === 0 || selectedParties.includes(cleanTurkishText(mp.party));
+            const provMatch = selectedProvinces.length === 0 || selectedProvinces.includes(cleanTurkishText(mp.province));
+            return partyMatch && provMatch;
+        });
+
+        if (mpsToExport.length === 0) return alert("Seçtiğiniz filtrelere uygun milletvekili bulunamadı.");
+
+        let headers = ["İsim", "Parti", "İl"];
+        if (colEmail && colEmail.checked) headers.push("E-posta");
+        if (colPhone && colPhone.checked) { headers.push("Telefon 1"); headers.push("Telefon 2"); }
+        if (colAddress && colAddress.checked) headers.push("Adres");
+
+        let csvContent = headers.join(",") + "\r\n";
+
+        mpsToExport.forEach(mp => {
+            const contact = mp.contact || {};
+            let row = [ escapeCSV(cleanTurkishText(mp.name)), escapeCSV(cleanTurkishText(mp.party)), escapeCSV(cleanTurkishText(mp.province)) ];
+
+            if (colEmail && colEmail.checked) row.push(escapeCSV(contact.email || ""));
+            if (colPhone && colPhone.checked) {
+                row.push(escapeCSV((contact.telephones && contact.telephones.length > 0) ? contact.telephones[0] : ""));
+                row.push(escapeCSV((contact.telephones && contact.telephones.length > 1) ? contact.telephones[1] : ""));
+            }
+            if (colAddress && colAddress.checked) row.push(escapeCSV(contact.address || ""));
+
+            csvContent += row.join(",") + "\r\n";
+        });
+
+        const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url; a.download = "tbmm_iletisim_bilgileri.csv";
+        document.body.appendChild(a); a.click(); document.body.removeChild(a);
     });
-
-    if (mpsToExport.length === 0) return alert("Seçtiğiniz filtrelere uygun milletvekili bulunamadı.");
-
-    let headers = ["İsim", "Parti", "İl"];
-    if (colEmail.checked) headers.push("E-posta");
-    if (colPhone.checked) { headers.push("Telefon 1"); headers.push("Telefon 2"); }
-    if (colAddress.checked) headers.push("Adres");
-
-    let csvContent = headers.join(",") + "\r\n";
-
-    mpsToExport.forEach(mp => {
-        const contact = mp.contact || {};
-        let row = [ escapeCSV(cleanTurkishText(mp.name)), escapeCSV(cleanTurkishText(mp.party)), escapeCSV(cleanTurkishText(mp.province)) ];
-
-        if (colEmail.checked) row.push(escapeCSV(contact.email || ""));
-        if (colPhone.checked) {
-            row.push(escapeCSV((contact.telephones && contact.telephones.length > 0) ? contact.telephones[0] : ""));
-            row.push(escapeCSV((contact.telephones && contact.telephones.length > 1) ? contact.telephones[1] : ""));
-        }
-        if (colAddress.checked) row.push(escapeCSV(contact.address || ""));
-
-        csvContent += row.join(",") + "\r\n";
-    });
-
-    const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url; a.download = "tbmm_iletisim_bilgileri.csv";
-    document.body.appendChild(a); a.click(); document.body.removeChild(a);
-});
+}
 
 // ==========================================
 // 7. MOBILE RESIZE LISTENER (OPTIMIZED)
 // ==========================================
 let resizeTimer;
-let lastWindowWidth = window.innerWidth; // Remembers the starting width
+let lastWindowWidth = window.innerWidth; 
 
 window.addEventListener('resize', () => {
     clearTimeout(resizeTimer);
     resizeTimer = setTimeout(() => {
         const currentWidth = window.innerWidth;
         
-        // ONLY redraw if the width actually changed (ignores vertical scrolling on phones)
         if (currentWidth !== lastWindowWidth) {
             lastWindowWidth = currentWidth;
             
@@ -565,4 +594,3 @@ window.addEventListener('resize', () => {
         }
     }, 250);
 });
-
