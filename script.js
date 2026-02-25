@@ -43,25 +43,6 @@ function makeSearchable(text) {
         .replace(/i̇/g, 'i'); 
 }
 
-function doNamesMatch(name1, name2) {
-    const clean1 = makeSearchable(cleanTurkishText(name1));
-    const clean2 = makeSearchable(cleanTurkishText(name2));
-
-    const n1 = clean1.replace(/\s+/g, ' ').trim().split(' ');
-    const n2 = clean2.replace(/\s+/g, ' ').trim().split(' ');
-
-    if (n1.join('') === n2.join('')) return true;
-
-    const shorter = n1.length < n2.length ? n1 : n2;
-    const longer = n1.length < n2.length ? n2 : n1;
-
-    if (shorter.length >= 2) {
-        const allMatch = shorter.every(part => longer.includes(part));
-        if (allMatch) return true;
-    }
-    return false;
-}
-
 function getPartyClass(partyName) {
     const p = makeSearchable(cleanTurkishText(partyName)); 
     if (p.includes("ak parti") || p.includes("adalet ve kalkinma")) return "akp";
@@ -84,7 +65,7 @@ function getPartyClass(partyName) {
 }
 
 // ==========================================
-// 3. DATA LOADING & INITIALIZATION
+// 3. DATA LOADING & INITIALIZATION (OPTIMIZED)
 // ==========================================
 Promise.all([
     fetch('data.json').then(res => res.json()),
@@ -94,17 +75,44 @@ Promise.all([
     contactData = contacts;
     allMPs = [];
 
+    // OPTIMIZATION 1: Pre-clean the voting names exactly ONCE so we don't do it 360,000 times
+    const preCleanedVotingData = Object.entries(votingData.mps).map(([voteName, voteInfo]) => {
+        return {
+            voteName: voteName,
+            voteInfo: voteInfo,
+            cleanArray: makeSearchable(cleanTurkishText(voteName)).replace(/\s+/g, ' ').trim().split(' ')
+        };
+    });
+
     // Master List merging
     for (const [contactName, contactInfo] of Object.entries(contactData)) {
         let mergedVotes = {};
-        for (const [voteName, voteInfo] of Object.entries(votingData.mps)) {
-            if (doNamesMatch(contactName, voteName)) {
-                mergedVotes = { ...mergedVotes, ...voteInfo.votes };
+        const contactCleanArray = makeSearchable(cleanTurkishText(contactName)).replace(/\s+/g, ' ').trim().split(' ');
+
+        for (const vData of preCleanedVotingData) {
+            const n1 = contactCleanArray;
+            const n2 = vData.cleanArray;
+
+            let isMatch = false;
+            if (n1.join('') === n2.join('')) {
+                isMatch = true;
+            } else {
+                const shorter = n1.length < n2.length ? n1 : n2;
+                const longer = n1.length < n2.length ? n2 : n1;
+                if (shorter.length >= 2 && shorter.every(part => longer.includes(part))) {
+                    isMatch = true;
+                }
+            }
+
+            if (isMatch) {
+                mergedVotes = { ...mergedVotes, ...vData.voteInfo.votes };
             }
         }
+        
         allMPs.push({
             name: contactName,
             party: contactInfo.party,       
+            partyClass: getPartyClass(contactInfo.party), // OPTIMIZATION 2: Pre-calculate the party color
             province: contactInfo.province, 
             votes: mergedVotes,             
             contact: contactInfo
@@ -120,8 +128,9 @@ Promise.all([
     };
 
     allMPs.sort((a, b) => {
-        const orderA = partySeatingOrder[getPartyClass(a.party)] || 99;
-        const orderB = partySeatingOrder[getPartyClass(b.party)] || 99;
+        // Use the pre-calculated partyClass
+        const orderA = partySeatingOrder[a.partyClass] || 99;
+        const orderB = partySeatingOrder[b.partyClass] || 99;
         if (orderA === orderB) return cleanTurkishText(a.name).localeCompare(cleanTurkishText(b.name), 'tr');
         return orderA - orderB;
     });
@@ -133,7 +142,7 @@ Promise.all([
         const partyVotes = {}; 
 
         allMPs.forEach(mp => {
-            const partyClass = getPartyClass(mp.party);
+            const partyClass = mp.partyClass; // Use pre-calculated!
             const rawVote = mp.votes[billId];
             if (!rawVote) return;
 
@@ -162,10 +171,10 @@ Promise.all([
         }
     }
 
-    // --- NEW: CALCULATE OVERALL PARTY STATS FOR SIDEBAR ---
+    // --- CALCULATE OVERALL PARTY STATS FOR SIDEBAR ---
     const partyDissentStats = {};
     allMPs.forEach(mp => {
-        const partyClass = getPartyClass(mp.party);
+        const partyClass = mp.partyClass; // Use pre-calculated!
         if (partyClass === 'bagimsiz') return;
 
         if (!partyDissentStats[partyClass]) {
@@ -261,7 +270,7 @@ if (closeIntroBtn) {
 // 4. DRAWING THE PARLIAMENT
 // ==========================================
 function drawParliament(mpsToDraw) {
-    if (!mapDiv) return; // Fail-safe
+    if (!mapDiv) return; 
     
     mapDiv.innerHTML = ''; 
     
@@ -313,7 +322,7 @@ function drawParliament(mpsToDraw) {
         const seat = seatCoords[i];
 
         const seatEl = document.createElement('div');
-        seatEl.className = `seat ${getPartyClass(mp.party)}`;
+        seatEl.className = `seat ${mp.partyClass}`; // Use pre-calculated!
         
         seatEl.style.left = `${seat.x}px`;
         seatEl.style.top = `${seat.y}px`;
@@ -333,13 +342,13 @@ function drawParliament(mpsToDraw) {
 // 5. MODAL (POPUP) LOGIC
 // ==========================================
 function showModal(mp) {
-    if (!modal) return; // Fail-safe
+    if (!modal) return; 
     
     let validBillsForMp = 0; 
     let attendedCount = 0;
     let differentFromPartyCount = 0;
     let validPartyVotes = 0;
-    const mpPartyClass = getPartyClass(mp.party);
+    const mpPartyClass = mp.partyClass; // Use pre-calculated!
 
     for (const billId of Object.keys(votingData.bills)) {
         const rawVote = mp.votes[billId];
@@ -477,7 +486,7 @@ if (modal) {
 // 6. FILTERING, EXPORT, RESIZE LOGIC
 // ==========================================
 function populateProvinceFilter() {
-    if (!provinceFilter) return; // Fail-safe
+    if (!provinceFilter) return; 
     const provinces = [...new Set(allMPs.map(mp => cleanTurkishText(mp.province)))].sort((a, b) => a.localeCompare(b, 'tr'));
     provinces.forEach(prov => {
         const option = document.createElement('option');
@@ -488,7 +497,7 @@ function populateProvinceFilter() {
 }
 
 function filterSeats() {
-    if (!searchInput || !provinceFilter) return; // Fail-safe
+    if (!searchInput || !provinceFilter) return; 
     const searchTerm = makeSearchable(searchInput.value); 
     const selectedProv = provinceFilter.value;
     const allSeatElements = document.querySelectorAll('.seat');
@@ -512,7 +521,7 @@ if (searchInput) searchInput.addEventListener('input', filterSeats);
 if (provinceFilter) provinceFilter.addEventListener('change', filterSeats);
 
 function populateExportFilters() {
-    if (!exportProvinceFilter || !exportPartyFilter) return; // Fail-safe
+    if (!exportProvinceFilter || !exportPartyFilter) return; 
     const provinces = [...new Set(allMPs.map(mp => cleanTurkishText(mp.province)))].sort((a, b) => a.localeCompare(b, 'tr'));
     provinces.forEach(prov => {
         const option = document.createElement('option'); option.value = prov; option.innerText = prov;
