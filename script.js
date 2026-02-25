@@ -261,7 +261,13 @@ function drawParliament(mpsToDraw) {
     const totalSeats = mpsToDraw.length;
     const rows = 12; 
     
-    const containerWidth = mapDiv.clientWidth || 800; 
+    // BULLETPROOF MOBILE MATH: 
+    // Measure the div, but NEVER let it be wider than the actual physical phone screen minus a 20px safety gap
+    let containerWidth = mapDiv.clientWidth || 800;
+    if (containerWidth > window.innerWidth) {
+        containerWidth = window.innerWidth - 20; 
+    }
+    
     const maxRadius = (containerWidth / 2) - 15; 
     const minRadius = maxRadius * 0.26; 
     
@@ -559,3 +565,4 @@ window.addEventListener('resize', () => {
         }
     }, 250);
 });
+
