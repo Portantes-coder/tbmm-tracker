@@ -19,18 +19,23 @@
         </div>
     </header>
 
-    <aside id="party-stats-sidebar" class="party-stats-sidebar">
-        <h3>Parti İçi Farklı Oy Oranları</h3>
-        <p class="stats-desc">Parti grubunun meclisteki çoğunluk kararına uymama (bağımsız oy kullanma) oranları.</p>
-        <ul id="party-stats-list"></ul>
-    </aside>
-
-    <main style="width: 100%; display: flex; flex-direction: column; align-items: center;">
+    <main style="width: 100%; display: flex; flex-direction: column; align-items: center; position: relative;">
         <div id="parliament-map" class="parliament-map"></div>
         
+        <details id="party-stats-sidebar" class="party-stats-card">
+            <summary class="stats-summary">
+                <h3>Parti İçi Farklı Oy Oranları</h3>
+                <span class="toggle-icon">▼</span>
+            </summary>
+            
+            <div class="stats-content">
+                <p class="stats-desc">Parti grubunun meclisteki çoğunluk kararına uymama (bağımsız oy kullanma) oranları.</p>
+                <ul id="party-stats-list"></ul>
+            </div>
+        </details>
+
         <section class="export-section">
             <details class="export-card">
-                
                 <summary class="export-summary">
                     <h2>Veri İndir (CSV)</h2>
                     <span class="toggle-icon">▼</span>
@@ -118,14 +123,11 @@
             <button id="closeIntroBtn" class="download-btn" style="margin-top: 10px; width: 100%;">Anladım, Siteye Devam Et</button>
         </div>
     </div>
-<footer class="legal-disclaimer">
+
+    <footer class="legal-disclaimer">
         <p><strong>Yasal Uyarı:</strong> Bu platform kâr amacı gütmeyen, bağımsız bir sivil teknoloji (açık veri) projesidir. Sitede yer alan tüm oylama ve iletişim verileri doğrudan Türkiye Büyük Millet Meclisi (tbmm.gov.tr) resmi kayıtlarından otomatik olarak derlenmiş olup, veriler üzerinde hiçbir içerik değişikliği yapılmamıştır. Platformun hiçbir siyasi parti, kurum veya şahısla resmi bağı bulunmamaktadır.</p>
     </footer>
 
     <script src="script.js"></script>
 </body>
-</html>
-    <script src="script.js"></script>
-</body>
-
 </html>
