@@ -22,9 +22,10 @@ header {
     background-color: #fff;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     margin-bottom: 2rem;
+    box-sizing: border-box;
 }
 
-h1 { margin: 0; color: #b30000; } /* Turkish Red */
+h1 { margin: 0; color: #b30000; } 
 p { color: #666; }
 
 .controls {
@@ -42,21 +43,20 @@ input, select {
     border-radius: 5px;
     width: 250px;
     max-width: 100%;
+    box-sizing: border-box;
 }
 
 /* --- PARLIAMENT MAP --- */
 .parliament-map {
     position: relative;
-    width: 100%;             /* Let it fill the screen on phones */
-    max-width: 800px;        /* Stop it from getting too huge on desktop */
+    width: 100%;             
+    max-width: 800px;        
     margin: 0 auto;
     overflow: visible;
 }
 
 .seat {
     position: absolute;
-    width: 10px;  
-    height: 10px; 
     border-radius: 50%;
     cursor: pointer;
     transform: translate(-50%, -50%);
@@ -115,7 +115,8 @@ input, select {
     box-shadow: 0 5px 15px rgba(0,0,0,0.3);
     display: flex;
     flex-direction: column;
-    overflow-y: auto; /* Allows the entire white box to scroll */
+    overflow-y: auto; 
+    box-sizing: border-box;
 }
 
 .close-btn {
@@ -146,7 +147,7 @@ input, select {
     align-items: center;
 }
 
-/* --- EXPORT PANEL --- */
+/* --- EXPORT PANEL (COLLAPSIBLE) --- */
 .export-section {
     width: 100%;
     display: flex;
@@ -161,23 +162,22 @@ input, select {
     box-shadow: 0 4px 10px rgba(0,0,0,0.1);
     max-width: 800px;
     width: 90%;
-    overflow: hidden; /* Keeps the rounded corners neat when collapsed */
+    overflow: hidden; 
 }
 
-/* The clickable header */
 .export-summary {
     padding: 15px 30px;
     cursor: pointer;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    list-style: none; /* Hides default browser arrow */
+    list-style: none; 
     background-color: #f8f9fa;
     transition: background-color 0.2s;
 }
 
 .export-summary::-webkit-details-marker {
-    display: none; /* Hides default arrow in Safari/Chrome */
+    display: none; 
 }
 
 .export-summary:hover {
@@ -186,15 +186,15 @@ input, select {
 
 .export-summary h2 { margin: 0; color: #333; font-size: 1.3rem; }
 
+/* Rotates the arrow when any details tag is open */
+details[open] .toggle-icon {
+    transform: rotate(180deg);
+}
+
 .toggle-icon {
     font-size: 1.2rem;
     color: #666;
     transition: transform 0.3s ease;
-}
-
-/* Rotates the arrow when the details tag is open */
-details[open] .toggle-icon {
-    transform: rotate(180deg);
 }
 
 .export-content {
@@ -232,7 +232,6 @@ details[open] .toggle-icon {
     background-color: #fcfcfc;
 }
 
-/* --- CHECKBOX STYLING --- */
 .group-header {
     font-weight: bold;
     margin-bottom: 8px;
@@ -279,6 +278,7 @@ details[open] .toggle-icon {
     border-radius: 5px;
     cursor: pointer;
     transition: background-color 0.2s;
+    width: 100%;
 }
 
 .download-btn:hover { background-color: #218838; }
@@ -356,52 +356,56 @@ details[open] .toggle-icon {
     min-width: 80px;
 }
 
-/* --- MOBILE OPTIMIZATIONS --- */
-@media (max-width: 600px) {
-    .modal-content {
-        width: 95%;
-        padding: 1.5rem 1rem;
-        max-height: 95vh;
-    }
-    
-    .controls {
-        flex-direction: column;
-        align-items: center;
-    }
-    
-    .controls input, .controls select {
-        width: 100%;
-        max-width: 100%;
-    }
-
-    .export-card {
-        padding: 15px;
-    }
-}
-/* --- NEW: PARTY STATS SIDEBAR --- */
-.party-stats-sidebar {
+/* --- NEW: PARTY STATS SIDEBAR (COLLAPSIBLE) --- */
+.party-stats-card {
     position: absolute;
     right: 20px;
     top: 120px;
-    width: 260px;
+    width: 280px;
     background: #fff;
-    padding: 20px;
     border-radius: 10px;
     box-shadow: 0 4px 15px rgba(0,0,0,0.1);
     z-index: 10;
+    overflow: hidden; /* Keeps the borders neat when closed */
 }
 
-.party-stats-sidebar h3 {
-    margin-top: 0;
-    font-size: 1.1rem;
+/* The clickable header */
+.stats-summary {
+    padding: 15px 20px;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    list-style: none; /* Hides default browser arrow */
+    background-color: #f8f9fa;
+    transition: background-color 0.2s;
+}
+
+.stats-summary::-webkit-details-marker {
+    display: none; /* Hides default arrow in Safari/Chrome */
+}
+
+.stats-summary:hover {
+    background-color: #f1f3f5;
+}
+
+.stats-summary h3 {
+    margin: 0;
+    font-size: 1rem;
     color: #333;
-    border-bottom: 2px solid #eee;
-    padding-bottom: 10px;
 }
 
-.party-stats-sidebar .stats-desc {
+/* Content inside the dropdown */
+.stats-content {
+    padding: 15px 20px;
+    border-top: 1px solid #eee;
+    background: #fff;
+}
+
+.stats-desc {
     font-size: 0.8rem;
     color: #666;
+    margin-top: 0;
     margin-bottom: 15px;
     line-height: 1.4;
 }
@@ -410,6 +414,8 @@ details[open] .toggle-icon {
     list-style: none;
     padding: 0;
     margin: 0;
+    max-height: 350px; /* Adds a scrollbar if the list gets too long */
+    overflow-y: auto;
 }
 
 #party-stats-list li {
@@ -435,18 +441,6 @@ details[open] .toggle-icon {
     color: #b30000;
 }
 
-/* --- UPDATE: MOBILE RESPONSIVE TWEAKS --- */
-@media (max-width: 1100px) {
-    .party-stats-sidebar {
-        position: static;
-        width: 90%;
-        max-width: 800px;
-        margin: 20px auto;
-        box-sizing: border-box;
-    }
-
-}
-
 /* --- FOOTER & YASAL UYARI --- */
 .legal-disclaimer {
     width: 100%;
@@ -455,7 +449,7 @@ details[open] .toggle-icon {
     text-align: center;
     padding: 20px;
     font-size: 0.8rem;
-    margin-top: 40px;
+    margin-top: auto;
     box-sizing: border-box;
 }
 
@@ -470,3 +464,33 @@ details[open] .toggle-icon {
     color: #ecf0f1;
 }
 
+/* --- MOBILE OPTIMIZATIONS --- */
+@media (max-width: 1300px) {
+    .party-stats-card {
+        position: static;
+        width: 90%;
+        max-width: 800px;
+        margin: 30px auto 10px auto; /* Perfect spacing below the map */
+        box-sizing: border-box;
+    }
+    
+    .modal-content {
+        width: 95%;
+        padding: 1.5rem 1rem;
+        max-height: 95vh;
+    }
+    
+    .controls {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .controls input, .controls select {
+        width: 100%;
+        max-width: 100%;
+    }
+
+    .export-card {
+        padding: 15px;
+    }
+}
