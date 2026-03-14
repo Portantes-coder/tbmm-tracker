@@ -452,7 +452,7 @@
     "RAMAZAN KAŞLI": {
         "name": "Ramazan Kaşli",
         "province": "Aksaray",
-        "party": "MHP",
+        "party": "BAĞIMSIZ",
         "address": "Halkla İlişkiler Binası  4.Kat F-415",
         "telephones": [
             "+90 312 4206148",
@@ -3108,7 +3108,7 @@
         "name": "Ali̇ Şahi̇n",
         "province": "Gaziantep",
         "party": "AK Parti",
-        "address": "Halkla İlişkiler Binası  1.Kat F-123",
+        "address": "",
         "telephones": [
             "+90 312 4206382",
             "+90 312 4206383"
@@ -3116,7 +3116,7 @@
         "faxes": [
             "+90 312 4202454"
         ],
-        "email": "ali.sahin@tbmm.gov.tr",
+        "email": "alisahin@tbmm.gov.tr",
         "image_url": "https://cdn.tbmm.gov.tr/IKBS/Milletvekilleri/Resim/8e6b36ab-ec65-48cd-bb1e-1fa24e55eee8.jpe"
     },
     "BÜNYAMİN BOZGEYİK": {
@@ -5470,7 +5470,7 @@
         "faxes": [
             "+90 312 4202412"
         ],
-        "email": "sebnem.bursali@tbmm.gov.tr",
+        "email": "sebnem.bursaliaksoy@tbmm.gov.tr",
         "image_url": "https://cdn.tbmm.gov.tr/IKBS/Milletvekilleri/Resim/41bb2e0c-9f2f-4ef6-9319-01881f4cb29f.jpe"
     },
     "TAMER OSMANAĞAOĞLU": {
